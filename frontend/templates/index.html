@@ -1,0 +1,19 @@
+<!-- frontend/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Analysis Tool</title>
+</head>
+<body>
+    <h1>Code Analysis Tool</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="codeFile" accept=".py, .js, .java">
+        <button type="submit">Analyze Code</button>
+    </form>
+    <div id="result"></div>
+    <!-- Use url_for to generate the correct path for main.js -->
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
