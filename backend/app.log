@@ -288,3 +288,4617 @@ pd.concat([df1,df2])
 merged = pd.merge(df1,df2,how='inner', on='Q')
 
 print (merged)
+2023-12-28 20:23:29,822 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-28 20:23:29,823 [33mPress CTRL+C to quit[0m
+2023-12-28 20:23:29,828  * Restarting with stat
+2023-12-28 20:23:30,413  * Debugger is active!
+2023-12-28 20:23:30,417  * Debugger PIN: 994-283-381
+2023-12-28 20:23:47,751 127.0.0.1 - - [28/Dec/2023 20:23:47] "GET / HTTP/1.1" 200 -
+2023-12-28 20:23:48,150 127.0.0.1 - - [28/Dec/2023 20:23:48] "GET /static/style.css HTTP/1.1" 200 -
+2023-12-28 20:23:48,186 127.0.0.1 - - [28/Dec/2023 20:23:48] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:27:37,181 127.0.0.1 - - [28/Dec/2023 20:27:37] "GET / HTTP/1.1" 200 -
+2023-12-28 20:27:37,205 127.0.0.1 - - [28/Dec/2023 20:27:37] "GET /static/style.css HTTP/1.1" 200 -
+2023-12-28 20:27:37,207 127.0.0.1 - - [28/Dec/2023 20:27:37] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:27:42,620 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:28:32,676 File Content:
+def sequence(g, l):
+    hens = (l - g * 4) / 2
+    return hens
+
+g, l = map(int, input().split())
+result = sequence(g, l)
+print(result)
+2023-12-28 20:29:57,077 File Content:
+def sequence(g, l):
+    hens = (l - g * 4) / 2
+    return hens
+
+g, l = map(int, input().split())
+result = sequence(g, l)
+print(result)
+2023-12-28 20:30:44,781 127.0.0.1 - - [28/Dec/2023 20:30:44] "GET / HTTP/1.1" 200 -
+2023-12-28 20:30:44,804 127.0.0.1 - - [28/Dec/2023 20:30:44] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:30:44,812 127.0.0.1 - - [28/Dec/2023 20:30:44] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:30:48,851 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:31:41,042 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:32:17,610 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:32:47,708 127.0.0.1 - - [28/Dec/2023 20:32:47] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:33:33,005 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:35:23,300  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:35:23,686  * Restarting with stat
+2023-12-28 20:36:12,077 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-28 20:36:12,078 [33mPress CTRL+C to quit[0m
+2023-12-28 20:36:12,083  * Restarting with stat
+2023-12-28 20:36:12,372  * Debugger is active!
+2023-12-28 20:36:12,378  * Debugger PIN: 994-283-381
+2023-12-28 20:36:17,131 127.0.0.1 - - [28/Dec/2023 20:36:17] "GET / HTTP/1.1" 200 -
+2023-12-28 20:36:17,453 127.0.0.1 - - [28/Dec/2023 20:36:17] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:36:17,475 127.0.0.1 - - [28/Dec/2023 20:36:17] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:36:26,248 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 39, in analyze_code
+    pylint_result = Run([temp_file_path])
+                    ^^^
+NameError: name 'Run' is not defined
+2023-12-28 20:36:26,252 127.0.0.1 - - [28/Dec/2023 20:36:26] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2023-12-28 20:37:25,577  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:37:25,621  * Restarting with stat
+2023-12-28 20:37:26,455  * Debugger is active!
+2023-12-28 20:37:26,459  * Debugger PIN: 994-283-381
+2023-12-28 20:37:29,592 127.0.0.1 - - [28/Dec/2023 20:37:29] "GET / HTTP/1.1" 200 -
+2023-12-28 20:37:29,904 127.0.0.1 - - [28/Dec/2023 20:37:29] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:37:29,916 127.0.0.1 - - [28/Dec/2023 20:37:29] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:38:05,583  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:38:05,756  * Restarting with stat
+2023-12-28 20:38:06,217  * Debugger is active!
+2023-12-28 20:38:06,223  * Debugger PIN: 994-283-381
+2023-12-28 20:38:13,553 127.0.0.1 - - [28/Dec/2023 20:38:13] "GET / HTTP/1.1" 200 -
+2023-12-28 20:38:13,853 127.0.0.1 - - [28/Dec/2023 20:38:13] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:38:13,859 127.0.0.1 - - [28/Dec/2023 20:38:13] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:39:27,097 127.0.0.1 - - [28/Dec/2023 20:39:27] "GET / HTTP/1.1" 200 -
+2023-12-28 20:39:27,121 127.0.0.1 - - [28/Dec/2023 20:39:27] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:39:27,123 127.0.0.1 - - [28/Dec/2023 20:39:27] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:43:04,243  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:43:04,488  * Restarting with stat
+2023-12-28 20:43:04,965  * Debugger is active!
+2023-12-28 20:43:04,969  * Debugger PIN: 994-283-381
+2023-12-28 20:43:08,804 127.0.0.1 - - [28/Dec/2023 20:43:08] "GET / HTTP/1.1" 200 -
+2023-12-28 20:43:09,110 127.0.0.1 - - [28/Dec/2023 20:43:09] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:43:09,121 127.0.0.1 - - [28/Dec/2023 20:43:09] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:46:24,209 127.0.0.1 - - [28/Dec/2023 20:46:24] "GET / HTTP/1.1" 200 -
+2023-12-28 20:46:24,231 127.0.0.1 - - [28/Dec/2023 20:46:24] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:46:24,236 127.0.0.1 - - [28/Dec/2023 20:46:24] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:47:36,870  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:47:37,069  * Restarting with stat
+2023-12-28 20:47:37,514  * Debugger is active!
+2023-12-28 20:47:37,518  * Debugger PIN: 994-283-381
+2023-12-28 20:47:39,952 127.0.0.1 - - [28/Dec/2023 20:47:39] "POST /analyze HTTP/1.1" 200 -
+2023-12-28 20:47:42,214 127.0.0.1 - - [28/Dec/2023 20:47:42] "GET / HTTP/1.1" 200 -
+2023-12-28 20:47:42,506 127.0.0.1 - - [28/Dec/2023 20:47:42] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:47:42,507 127.0.0.1 - - [28/Dec/2023 20:47:42] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:47:46,254 127.0.0.1 - - [28/Dec/2023 20:47:46] "POST /analyze HTTP/1.1" 200 -
+2023-12-28 20:48:29,696  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:48:29,750  * Restarting with stat
+2023-12-28 20:48:30,279  * Debugger is active!
+2023-12-28 20:48:30,283  * Debugger PIN: 994-283-381
+2023-12-28 20:48:41,070 127.0.0.1 - - [28/Dec/2023 20:48:41] "GET / HTTP/1.1" 200 -
+2023-12-28 20:48:41,352 127.0.0.1 - - [28/Dec/2023 20:48:41] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:48:41,367 127.0.0.1 - - [28/Dec/2023 20:48:41] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:51:41,651 127.0.0.1 - - [28/Dec/2023 20:51:41] "GET / HTTP/1.1" 200 -
+2023-12-28 20:51:41,674 127.0.0.1 - - [28/Dec/2023 20:51:41] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:51:41,679 127.0.0.1 - - [28/Dec/2023 20:51:41] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:51:57,232 127.0.0.1 - - [28/Dec/2023 20:51:57] "GET / HTTP/1.1" 200 -
+2023-12-28 20:51:57,255 127.0.0.1 - - [28/Dec/2023 20:51:57] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:51:57,256 127.0.0.1 - - [28/Dec/2023 20:51:57] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:52:11,224 127.0.0.1 - - [28/Dec/2023 20:52:11] "GET / HTTP/1.1" 200 -
+2023-12-28 20:52:11,247 127.0.0.1 - - [28/Dec/2023 20:52:11] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:52:11,248 127.0.0.1 - - [28/Dec/2023 20:52:11] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:53:10,283 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-28 20:53:10,285 [33mPress CTRL+C to quit[0m
+2023-12-28 20:53:10,288  * Restarting with stat
+2023-12-28 20:53:11,058  * Debugger is active!
+2023-12-28 20:53:11,064  * Debugger PIN: 994-283-381
+2023-12-28 20:53:16,148 127.0.0.1 - - [28/Dec/2023 20:53:16] "GET / HTTP/1.1" 200 -
+2023-12-28 20:53:16,603 127.0.0.1 - - [28/Dec/2023 20:53:16] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:53:16,612 127.0.0.1 - - [28/Dec/2023 20:53:16] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 20:55:45,540  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:55:45,760  * Restarting with stat
+2023-12-28 20:55:46,273  * Debugger is active!
+2023-12-28 20:55:46,278  * Debugger PIN: 994-283-381
+2023-12-28 20:55:49,648 127.0.0.1 - - [28/Dec/2023 20:55:49] "GET / HTTP/1.1" 200 -
+2023-12-28 20:55:49,949 127.0.0.1 - - [28/Dec/2023 20:55:49] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:55:49,954 127.0.0.1 - - [28/Dec/2023 20:55:49] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:55:53,626 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:59:06,862  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 20:59:07,077  * Restarting with stat
+2023-12-28 20:59:07,527  * Debugger is active!
+2023-12-28 20:59:07,531  * Debugger PIN: 994-283-381
+2023-12-28 20:59:10,872 127.0.0.1 - - [28/Dec/2023 20:59:10] "GET / HTTP/1.1" 200 -
+2023-12-28 20:59:11,194 127.0.0.1 - - [28/Dec/2023 20:59:11] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 20:59:11,202 127.0.0.1 - - [28/Dec/2023 20:59:11] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 20:59:14,752 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 20:59:14,766 Before saving code to the temporary file
+2023-12-28 20:59:14,767 After saving code to the temporary file
+2023-12-28 21:00:22,754  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:00:22,933  * Restarting with stat
+2023-12-28 21:00:23,542  * Debugger is active!
+2023-12-28 21:00:23,552  * Debugger PIN: 994-283-381
+2023-12-28 21:00:25,543 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:08:27,472 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:10:43,119  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:10:43,336  * Restarting with stat
+2023-12-28 21:11:33,308 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-28 21:11:33,308 [33mPress CTRL+C to quit[0m
+2023-12-28 21:11:33,310  * Restarting with stat
+2023-12-28 21:11:33,746  * Debugger is active!
+2023-12-28 21:11:33,750  * Debugger PIN: 994-283-381
+2023-12-28 21:11:36,760 127.0.0.1 - - [28/Dec/2023 21:11:36] "GET / HTTP/1.1" 200 -
+2023-12-28 21:11:37,049 127.0.0.1 - - [28/Dec/2023 21:11:37] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:11:37,061 127.0.0.1 - - [28/Dec/2023 21:11:37] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:11:40,867 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 39, in analyze_code
+    (pylint_stdout, pylint_stderr) = lint.py_run(temp_file_path, return_std=True)
+                                     ^^^^^^^^^^^
+AttributeError: module 'pylint.lint' has no attribute 'py_run'
+2023-12-28 21:11:40,870 127.0.0.1 - - [28/Dec/2023 21:11:40] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2023-12-28 21:12:00,932 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 39, in analyze_code
+    (pylint_stdout, pylint_stderr) = lint.py_run(temp_file_path, return_std=True)
+                                     ^^^^^^^^^^^
+AttributeError: module 'pylint.lint' has no attribute 'py_run'
+2023-12-28 21:12:00,934 127.0.0.1 - - [28/Dec/2023 21:12:00] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2023-12-28 21:12:32,943  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:12:33,006  * Restarting with stat
+2023-12-28 21:12:33,461  * Debugger is active!
+2023-12-28 21:12:33,465  * Debugger PIN: 994-283-381
+2023-12-28 21:12:36,899 127.0.0.1 - - [28/Dec/2023 21:12:36] "GET / HTTP/1.1" 200 -
+2023-12-28 21:12:37,207 127.0.0.1 - - [28/Dec/2023 21:12:37] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:12:37,211 127.0.0.1 - - [28/Dec/2023 21:12:37] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:14:34,820  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:14:35,054  * Restarting with stat
+2023-12-28 21:14:35,526  * Debugger is active!
+2023-12-28 21:14:35,530  * Debugger PIN: 994-283-381
+2023-12-28 21:14:39,989 127.0.0.1 - - [28/Dec/2023 21:14:39] "GET / HTTP/1.1" 200 -
+2023-12-28 21:14:40,282 127.0.0.1 - - [28/Dec/2023 21:14:40] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:14:40,295 127.0.0.1 - - [28/Dec/2023 21:14:40] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:16:27,938  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:16:28,198  * Restarting with stat
+2023-12-28 21:17:36,700  * Restarting with stat
+2023-12-28 21:17:37,162  * Debugger is active!
+2023-12-28 21:17:37,166  * Debugger PIN: 994-283-381
+2023-12-28 21:17:39,459 127.0.0.1 - - [28/Dec/2023 21:17:39] "GET / HTTP/1.1" 200 -
+2023-12-28 21:17:39,792 127.0.0.1 - - [28/Dec/2023 21:17:39] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:17:39,803 127.0.0.1 - - [28/Dec/2023 21:17:39] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:22:37,433 127.0.0.1 - - [28/Dec/2023 21:22:37] "GET / HTTP/1.1" 200 -
+2023-12-28 21:22:37,453 127.0.0.1 - - [28/Dec/2023 21:22:37] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:22:37,456 127.0.0.1 - - [28/Dec/2023 21:22:37] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:23:59,374  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:23:59,631  * Restarting with stat
+2023-12-28 21:24:00,081  * Debugger is active!
+2023-12-28 21:24:00,091  * Debugger PIN: 994-283-381
+2023-12-28 21:24:01,783 127.0.0.1 - - [28/Dec/2023 21:24:01] "GET / HTTP/1.1" 200 -
+2023-12-28 21:24:02,068 127.0.0.1 - - [28/Dec/2023 21:24:02] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:24:02,098 127.0.0.1 - - [28/Dec/2023 21:24:02] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:25:14,357  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:25:14,575  * Restarting with stat
+2023-12-28 21:27:39,388 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-28 21:27:39,389 [33mPress CTRL+C to quit[0m
+2023-12-28 21:27:39,394  * Restarting with stat
+2023-12-28 21:27:39,842  * Debugger is active!
+2023-12-28 21:27:39,846  * Debugger PIN: 994-283-381
+2023-12-28 21:27:41,484 127.0.0.1 - - [28/Dec/2023 21:27:41] "GET / HTTP/1.1" 200 -
+2023-12-28 21:27:41,843 127.0.0.1 - - [28/Dec/2023 21:27:41] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:27:41,878 127.0.0.1 - - [28/Dec/2023 21:27:41] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:30:29,252 127.0.0.1 - - [28/Dec/2023 21:30:29] "GET / HTTP/1.1" 200 -
+2023-12-28 21:30:29,277 127.0.0.1 - - [28/Dec/2023 21:30:29] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:30:29,281 127.0.0.1 - - [28/Dec/2023 21:30:29] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:31:23,618 127.0.0.1 - - [28/Dec/2023 21:31:23] "GET / HTTP/1.1" 200 -
+2023-12-28 21:31:23,662 127.0.0.1 - - [28/Dec/2023 21:31:23] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:31:23,664 127.0.0.1 - - [28/Dec/2023 21:31:23] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:32:10,963 127.0.0.1 - - [28/Dec/2023 21:32:10] "GET / HTTP/1.1" 200 -
+2023-12-28 21:32:10,986 127.0.0.1 - - [28/Dec/2023 21:32:10] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:32:10,987 127.0.0.1 - - [28/Dec/2023 21:32:10] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:33:04,882 127.0.0.1 - - [28/Dec/2023 21:33:04] "GET / HTTP/1.1" 200 -
+2023-12-28 21:33:04,904 127.0.0.1 - - [28/Dec/2023 21:33:04] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:33:04,911 127.0.0.1 - - [28/Dec/2023 21:33:04] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:35:17,303 127.0.0.1 - - [28/Dec/2023 21:35:17] "GET / HTTP/1.1" 200 -
+2023-12-28 21:35:17,350 127.0.0.1 - - [28/Dec/2023 21:35:17] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:35:17,353 127.0.0.1 - - [28/Dec/2023 21:35:17] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:36:58,097 127.0.0.1 - - [28/Dec/2023 21:36:58] "GET / HTTP/1.1" 200 -
+2023-12-28 21:36:58,117 127.0.0.1 - - [28/Dec/2023 21:36:58] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:36:58,129 127.0.0.1 - - [28/Dec/2023 21:36:58] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:39:00,126  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:39:00,511  * Restarting with stat
+2023-12-28 21:39:01,332  * Debugger is active!
+2023-12-28 21:39:01,341  * Debugger PIN: 994-283-381
+2023-12-28 21:39:04,050 127.0.0.1 - - [28/Dec/2023 21:39:04] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2023-12-28 21:39:04,377 127.0.0.1 - - [28/Dec/2023 21:39:04] "[36mGET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2023-12-28 21:39:04,385 127.0.0.1 - - [28/Dec/2023 21:39:04] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:39:04,435 127.0.0.1 - - [28/Dec/2023 21:39:04] "[36mGET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2023-12-28 21:39:04,799 127.0.0.1 - - [28/Dec/2023 21:39:04] "[36mGET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2023-12-28 21:39:10,403  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:39:10,479  * Restarting with stat
+2023-12-28 21:39:11,106  * Debugger is active!
+2023-12-28 21:39:11,109  * Debugger PIN: 994-283-381
+2023-12-28 21:39:11,823 127.0.0.1 - - [28/Dec/2023 21:39:11] "GET / HTTP/1.1" 200 -
+2023-12-28 21:39:12,134 127.0.0.1 - - [28/Dec/2023 21:39:12] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:39:12,151 127.0.0.1 - - [28/Dec/2023 21:39:12] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:41:32,619  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:41:32,975  * Restarting with stat
+2023-12-28 21:41:33,542  * Debugger is active!
+2023-12-28 21:41:33,546  * Debugger PIN: 994-283-381
+2023-12-28 21:41:34,949 127.0.0.1 - - [28/Dec/2023 21:41:34] "GET / HTTP/1.1" 200 -
+2023-12-28 21:41:35,258 127.0.0.1 - - [28/Dec/2023 21:41:35] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:41:35,268 127.0.0.1 - - [28/Dec/2023 21:41:35] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:42:45,910  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:42:46,286  * Restarting with stat
+2023-12-28 21:42:46,862  * Debugger is active!
+2023-12-28 21:42:46,868  * Debugger PIN: 994-283-381
+2023-12-28 21:42:47,548 127.0.0.1 - - [28/Dec/2023 21:42:47] "GET / HTTP/1.1" 200 -
+2023-12-28 21:42:47,888 127.0.0.1 - - [28/Dec/2023 21:42:47] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:42:47,888 127.0.0.1 - - [28/Dec/2023 21:42:47] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:42:51,352 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:44:03,805 127.0.0.1 - - [28/Dec/2023 21:44:03] "GET / HTTP/1.1" 200 -
+2023-12-28 21:44:03,831 127.0.0.1 - - [28/Dec/2023 21:44:03] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:44:03,833 127.0.0.1 - - [28/Dec/2023 21:44:03] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:44:07,591 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:44:14,808 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:44:23,471 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:44:52,217  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:44:52,456  * Restarting with stat
+2023-12-28 21:44:53,193  * Debugger is active!
+2023-12-28 21:44:53,200  * Debugger PIN: 994-283-381
+2023-12-28 21:44:54,360 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:44:55,820 127.0.0.1 - - [28/Dec/2023 21:44:55] "GET / HTTP/1.1" 200 -
+2023-12-28 21:44:56,120 127.0.0.1 - - [28/Dec/2023 21:44:56] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:44:56,133 127.0.0.1 - - [28/Dec/2023 21:44:56] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:45:00,224 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:45:49,372  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:45:49,593  * Restarting with stat
+2023-12-28 21:45:50,049  * Debugger is active!
+2023-12-28 21:45:50,055  * Debugger PIN: 994-283-381
+2023-12-28 21:45:53,138 127.0.0.1 - - [28/Dec/2023 21:45:53] "GET / HTTP/1.1" 200 -
+2023-12-28 21:45:53,411 127.0.0.1 - - [28/Dec/2023 21:45:53] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:45:53,430 127.0.0.1 - - [28/Dec/2023 21:45:53] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:45:56,855 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:46:53,943 127.0.0.1 - - [28/Dec/2023 21:46:53] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:46:53,950 127.0.0.1 - - [28/Dec/2023 21:46:53] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2023-12-28 21:48:27,572  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:48:27,821  * Restarting with stat
+2023-12-28 21:48:28,421  * Debugger is active!
+2023-12-28 21:48:28,425  * Debugger PIN: 994-283-381
+2023-12-28 21:48:31,166 127.0.0.1 - - [28/Dec/2023 21:48:31] "GET / HTTP/1.1" 200 -
+2023-12-28 21:48:31,484 127.0.0.1 - - [28/Dec/2023 21:48:31] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:48:31,493 127.0.0.1 - - [28/Dec/2023 21:48:31] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:48:34,724 127.0.0.1 - - [28/Dec/2023 21:48:34] "POST /analyze HTTP/1.1" 200 -
+2023-12-28 21:48:39,422 127.0.0.1 - - [28/Dec/2023 21:48:39] "POST /analyze HTTP/1.1" 200 -
+2023-12-28 21:49:17,578  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:49:17,626  * Restarting with stat
+2023-12-28 21:49:18,087  * Debugger is active!
+2023-12-28 21:49:18,091  * Debugger PIN: 994-283-381
+2023-12-28 21:51:23,423 127.0.0.1 - - [28/Dec/2023 21:51:23] "GET / HTTP/1.1" 200 -
+2023-12-28 21:51:23,740 127.0.0.1 - - [28/Dec/2023 21:51:23] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:51:23,745 127.0.0.1 - - [28/Dec/2023 21:51:23] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:51:26,910 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:54:37,069  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 21:54:37,287  * Restarting with stat
+2023-12-28 21:55:35,751  * Restarting with stat
+2023-12-28 21:56:34,424  * Debugger is active!
+2023-12-28 21:56:34,428  * Debugger PIN: 994-283-381
+2023-12-28 21:56:36,899 127.0.0.1 - - [28/Dec/2023 21:56:36] "GET / HTTP/1.1" 200 -
+2023-12-28 21:56:37,215 127.0.0.1 - - [28/Dec/2023 21:56:37] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:56:37,234 127.0.0.1 - - [28/Dec/2023 21:56:37] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:56:41,642 127.0.0.1 - - [28/Dec/2023 21:56:41] "[31m[1mPOST / HTTP/1.1[0m" 405 -
+2023-12-28 21:57:59,899 127.0.0.1 - - [28/Dec/2023 21:57:59] "[31m[1mPOST / HTTP/1.1[0m" 405 -
+2023-12-28 21:58:00,724 127.0.0.1 - - [28/Dec/2023 21:58:00] "[31m[1mPOST / HTTP/1.1[0m" 405 -
+2023-12-28 21:58:02,017 127.0.0.1 - - [28/Dec/2023 21:58:02] "GET / HTTP/1.1" 200 -
+2023-12-28 21:58:02,129 127.0.0.1 - - [28/Dec/2023 21:58:02] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:58:02,136 127.0.0.1 - - [28/Dec/2023 21:58:02] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 21:58:06,462 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 21:59:08,902 127.0.0.1 - - [28/Dec/2023 21:59:08] "GET / HTTP/1.1" 200 -
+2023-12-28 21:59:08,929 127.0.0.1 - - [28/Dec/2023 21:59:08] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 21:59:08,931 127.0.0.1 - - [28/Dec/2023 21:59:08] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 21:59:12,868 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:02:24,574 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:04:09,504 127.0.0.1 - - [28/Dec/2023 22:04:09] "GET / HTTP/1.1" 200 -
+2023-12-28 22:04:09,536 127.0.0.1 - - [28/Dec/2023 22:04:09] "GET /static/style.css HTTP/1.1" 200 -
+2023-12-28 22:04:09,538 127.0.0.1 - - [28/Dec/2023 22:04:09] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:04:33,142 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:04:33,142 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:05:20,275 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:05:46,174 127.0.0.1 - - [28/Dec/2023 22:05:46] "GET / HTTP/1.1" 200 -
+2023-12-28 22:05:46,195 127.0.0.1 - - [28/Dec/2023 22:05:46] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:05:46,201 127.0.0.1 - - [28/Dec/2023 22:05:46] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:07:13,510 127.0.0.1 - - [28/Dec/2023 22:07:13] "GET / HTTP/1.1" 200 -
+2023-12-28 22:07:13,534 127.0.0.1 - - [28/Dec/2023 22:07:13] "GET /static/style.css HTTP/1.1" 200 -
+2023-12-28 22:07:13,535 127.0.0.1 - - [28/Dec/2023 22:07:13] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:07:21,580 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:09:44,965  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 22:09:45,663  * Debugger is active!
+2023-12-28 22:09:45,666  * Debugger PIN: 994-283-381
+2023-12-28 22:09:48,179 127.0.0.1 - - [28/Dec/2023 22:09:48] "GET / HTTP/1.1" 200 -
+2023-12-28 22:09:48,520 127.0.0.1 - - [28/Dec/2023 22:09:48] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:09:48,527 127.0.0.1 - - [28/Dec/2023 22:09:48] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 22:09:53,127 127.0.0.1 - - [28/Dec/2023 22:09:53] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:09:53,157 127.0.0.1 - - [28/Dec/2023 22:09:53] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:09:53,160 127.0.0.1 - - [28/Dec/2023 22:09:53] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:10:17,555 127.0.0.1 - - [28/Dec/2023 22:10:17] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:10:17,573 127.0.0.1 - - [28/Dec/2023 22:10:17] "GET /static/style.css HTTP/1.1" 200 -
+2023-12-28 22:10:17,577 127.0.0.1 - - [28/Dec/2023 22:10:17] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 22:10:22,429 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:10:50,916  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 22:10:51,586  * Debugger is active!
+2023-12-28 22:10:51,593  * Debugger PIN: 994-283-381
+2023-12-28 22:10:53,633 127.0.0.1 - - [28/Dec/2023 22:10:53] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:10:53,987 127.0.0.1 - - [28/Dec/2023 22:10:53] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:10:54,024 127.0.0.1 - - [28/Dec/2023 22:10:54] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:10:57,602 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:12:21,351 127.0.0.1 - - [28/Dec/2023 22:12:21] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:12:40,846 127.0.0.1 - - [28/Dec/2023 22:12:40] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:12:40,875 127.0.0.1 - - [28/Dec/2023 22:12:40] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:12:40,882 127.0.0.1 - - [28/Dec/2023 22:12:40] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:12:53,545 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:13:51,025 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:15:21,355  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 22:15:22,051  * Debugger is active!
+2023-12-28 22:15:22,057  * Debugger PIN: 994-283-381
+2023-12-28 22:15:25,571 127.0.0.1 - - [28/Dec/2023 22:15:25] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:15:25,939 127.0.0.1 - - [28/Dec/2023 22:15:25] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:15:25,944 127.0.0.1 - - [28/Dec/2023 22:15:25] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:15:29,490 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:16:21,131 127.0.0.1 - - [28/Dec/2023 22:16:21] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:16:21,157 127.0.0.1 - - [28/Dec/2023 22:16:21] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:16:21,161 127.0.0.1 - - [28/Dec/2023 22:16:21] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:16:25,530 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:16:38,812 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:18:29,577  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 22:23:50,709  * Debugger is active!
+2023-12-28 22:23:50,716  * Debugger PIN: 994-283-381
+2023-12-28 22:23:59,788 127.0.0.1 - - [28/Dec/2023 22:23:59] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:24:00,149 127.0.0.1 - - [28/Dec/2023 22:24:00] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:24:00,192 127.0.0.1 - - [28/Dec/2023 22:24:00] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 22:24:03,798 127.0.0.1 - - [28/Dec/2023 22:24:03] "[33mPOST /upload HTTP/1.1[0m" 404 -
+2023-12-28 22:24:12,374 127.0.0.1 - - [28/Dec/2023 22:24:12] "[33mPOST /upload HTTP/1.1[0m" 404 -
+2023-12-28 22:24:16,478 127.0.0.1 - - [28/Dec/2023 22:24:16] "[33mPOST /upload HTTP/1.1[0m" 404 -
+2023-12-28 22:27:08,671 127.0.0.1 - - [28/Dec/2023 22:27:08] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:27:08,695 127.0.0.1 - - [28/Dec/2023 22:27:08] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:27:08,696 127.0.0.1 - - [28/Dec/2023 22:27:08] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-28 22:27:12,035 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-28 22:30:04,899  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-28 22:30:05,590  * Debugger is active!
+2023-12-28 22:30:05,594  * Debugger PIN: 994-283-381
+2023-12-28 22:30:08,098 127.0.0.1 - - [28/Dec/2023 22:30:08] "GET /?codeFile=genetic_algorithm_code.py HTTP/1.1" 200 -
+2023-12-28 22:30:08,315 127.0.0.1 - - [28/Dec/2023 22:30:08] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-28 22:30:08,328 127.0.0.1 - - [28/Dec/2023 22:30:08] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-28 22:30:12,127 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+

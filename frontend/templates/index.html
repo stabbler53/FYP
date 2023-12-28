@@ -1,19 +1,22 @@
-<!-- frontend/templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Analysis Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Code Guardian</title>
 </head>
 <body>
-    <h1>Code Analysis Tool</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="codeFile" accept=".py, .js, .java">
-        <button type="submit">Analyze Code</button>
-    </form>
-    <div id="result"></div>
-    <!-- Use url_for to generate the correct path for main.js -->
+    <div class="container">
+        <h1>Code Guardian</h1>
+        <form id="uploadForm">
+            <label for="codeFile">Upload a Python file:</label>
+            <input type="file" id="codeFile" name="codeFile" accept=".py" required>
+            <button type="submit">Analyze Code</button>
+        </form>
+        <div id="result" class="result-container"></div>
+    </div>
+
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

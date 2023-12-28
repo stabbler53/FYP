@@ -5,8 +5,10 @@ import time
 import logging
 from flask import Flask, render_template, request, jsonify
 from pylint.lint import Run
+from flask_cors import CORS
 
 app = Flask(__name__, static_folder='../frontend/static', template_folder='../frontend/templates')
+CORS(app)  # Enable CORS for all routes
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG,
@@ -47,13 +49,12 @@ def analyze_code():
         }
 
         return jsonify(result)
-
     except Exception as e:
         result = {
-            'error': f'An error occurred during analysis: {str(e)}'
-        }
-        logging.error('Error during analysis:', exc_info=True)
-        return jsonify(result), 500
+        'error': f'An error occurred during analysis: {str(e)}'
+    }
+    logging.error('Error during analysis:', exc_info=True)  # Log the exception details
+    return jsonify(result), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
