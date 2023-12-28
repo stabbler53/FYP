@@ -52,9 +52,9 @@ def analyze_code():
     except Exception as e:
         result = {
         'error': f'An error occurred during analysis: {str(e)}'
-    }
-    logging.error('Error during analysis:', exc_info=True)  # Log the exception details
-    return jsonify(result), 500
+        }
+        logging.error('Error during analysis:', exc_info=True)  # Log the exception details
+        return jsonify(result), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
