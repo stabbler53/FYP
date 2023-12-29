@@ -1,0 +1,19 @@
+2023-12-29 06:59:16,117 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 06:59:16,118 [33mPress CTRL+C to quit[0m
+2023-12-29 06:59:16,122  * Restarting with stat
+2023-12-29 06:59:18,027  * Debugger is active!
+2023-12-29 06:59:18,035  * Debugger PIN: 994-283-381
+2023-12-29 07:11:12,522 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 07:11:12,523 [33mPress CTRL+C to quit[0m
+2023-12-29 07:11:12,526  * Restarting with stat
+2023-12-29 07:11:14,147  * Debugger is active!
+2023-12-29 07:11:14,157  * Debugger PIN: 994-283-381
+2023-12-29 07:17:19,330  * Detected change in 'D:\\FYPcode\\backend\\app.py', reloading
+2023-12-29 07:24:13,891 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 07:24:13,893 [33mPress CTRL+C to quit[0m
+2023-12-29 07:24:13,896  * Restarting with stat
+2023-12-29 07:24:15,777  * Debugger is active!
+2023-12-29 07:24:15,785  * Debugger PIN: 994-283-381

@@ -5,10 +5,11 @@ import time
 import logging
 from flask import Flask, render_template, request, jsonify
 from pylint.lint import Run
+from pylint.reporters.text import ParseableTextReporter
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder='../frontend/static', template_folder='../frontend/templates')
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/analyze": {"origins": "http://localhost:5000"}})  # Allow requests only from your frontend origin
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG,
@@ -41,20 +42,31 @@ def analyze_code():
             logging.debug("File Content:\n%s" % file_content)
 
         # Run pylint without 'do_exit'
-        pylint_result = Run([temp_file_path])
-        pylint_output = pylint_result.linter.stats['global_note']
+        pylint_result = Run([temp_file_path], exit=False)
+
+        # Check if 'global_note' is present in pylint_result.linter.stats
+        pylint_output = getattr(pylint_result.linter.stats, 'global_note', 'N/A')
+
+        # Extract linting comments
+        linting_comments = extract_comments_from_reporter(pylint_result.linter.reporter)
 
         result = {
-            'message': f'Pylint Output: {pylint_output}'
+            'message': f'Pylint Output: {pylint_output}',
+            'linting_comments': linting_comments
         }
 
-        return jsonify(result)
+        return jsonify(result)  # Explicitly set the content type to JSON
     except Exception as e:
         result = {
-        'error': f'An error occurred during analysis: {str(e)}'
+            'error': f'An error occurred during analysis: {str(e)}'
         }
         logging.error('Error during analysis:', exc_info=True)  # Log the exception details
         return jsonify(result), 500
+
+def extract_comments_from_reporter(reporter):
+    if isinstance(reporter, ParseableTextReporter):
+        return [msg.message for msg in reporter.data]
+    return []
 
 if __name__ == '__main__':
     app.run(debug=True)
