@@ -55,11 +55,11 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
         // Additional error handling for the request
         xhr.onerror = function () {
             console.error('An error occurred during the request. Check the browser console for more details.');
-
+        
             // Log additional details about the error
             console.log('XHR status:', xhr.status);
             console.log('XHR response:', xhr.responseText);
-
+        
             hideLoadingSpinner();
             displayResult('An error occurred during the analysis.');
         };
@@ -78,7 +78,6 @@ document.getElementById('uploadForm').addEventListener('submit', function (event
     }
 });
 
-// ... (rest of the functions remain the same)
 
 function showLoadingSpinner() {
     // Create and append a loading spinner to the result container

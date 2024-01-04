@@ -17,3 +17,322 @@
 2023-12-29 07:24:13,896  * Restarting with stat
 2023-12-29 07:24:15,777  * Debugger is active!
 2023-12-29 07:24:15,785  * Debugger PIN: 994-283-381
+2024-01-04 18:07:00,760 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:07:00,855 [33mPress CTRL+C to quit[0m
+2024-01-04 18:07:00,858  * Restarting with stat
+2024-01-04 18:07:02,452  * Debugger is active!
+2024-01-04 18:07:02,460  * Debugger PIN: 994-283-381
+2024-01-04 18:07:11,201  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:09:33,926 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:09:33,928 [33mPress CTRL+C to quit[0m
+2024-01-04 18:09:33,930  * Restarting with stat
+2024-01-04 18:09:35,472  * Debugger is active!
+2024-01-04 18:09:35,481  * Debugger PIN: 994-283-381
+2024-01-04 18:09:43,187  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:12:01,377 Serving on http://127.0.0.1:5000
+2024-01-04 18:12:14,422 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 37, in analyze_code
+    code_file.save(file_path)
+  File "C:\Python312\Lib\site-packages\werkzeug\datastructures\file_storage.py", line 125, in save
+    dst = open(dst, "wb")
+          ^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'temp_files\\a7733d06ddfb16e9bc9f785975b73184.py'
+2024-01-04 18:13:16,112 Serving on http://127.0.0.1:5000
+2024-01-04 18:13:58,190 Serving on http://127.0.0.1:5000
+2024-01-04 18:15:45,392 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:15:45,393 [33mPress CTRL+C to quit[0m
+2024-01-04 18:15:45,397  * Restarting with stat
+2024-01-04 18:15:46,987  * Debugger is active!
+2024-01-04 18:15:46,995  * Debugger PIN: 994-283-381
+2024-01-04 18:15:50,634 127.0.0.1 - - [04/Jan/2024 18:15:50] "GET / HTTP/1.1" 200 -
+2024-01-04 18:15:50,955 127.0.0.1 - - [04/Jan/2024 18:15:50] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:15:50,956 127.0.0.1 - - [04/Jan/2024 18:15:50] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:15:58,025 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 37, in analyze_code
+    code_file.save(file_path)
+  File "C:\Python312\Lib\site-packages\werkzeug\datastructures\file_storage.py", line 125, in save
+    dst = open(dst, "wb")
+          ^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'temp_files\\a7733d06ddfb16e9bc9f785975b73184.py'
+2024-01-04 18:15:58,030 127.0.0.1 - - [04/Jan/2024 18:15:58] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2024-01-04 18:17:06,662  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:17:26,500 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:17:26,502 [33mPress CTRL+C to quit[0m
+2024-01-04 18:17:26,507  * Restarting with stat
+2024-01-04 18:17:28,320  * Debugger is active!
+2024-01-04 18:17:28,335  * Debugger PIN: 994-283-381
+2024-01-04 18:17:30,085 127.0.0.1 - - [04/Jan/2024 18:17:30] "GET / HTTP/1.1" 200 -
+2024-01-04 18:17:30,404 127.0.0.1 - - [04/Jan/2024 18:17:30] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:17:30,405 127.0.0.1 - - [04/Jan/2024 18:17:30] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:17:35,435 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:17:59,704 127.0.0.1 - - [04/Jan/2024 18:17:59] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 18:19:30,134 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2024-01-04 18:19:33,364 127.0.0.1 - - [04/Jan/2024 18:19:33] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 18:32:01,325 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:32:01,328 [33mPress CTRL+C to quit[0m
+2024-01-04 18:32:01,331  * Restarting with stat
+2024-01-04 18:32:03,744 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:32:03,746 [33mPress CTRL+C to quit[0m
+2024-01-04 18:32:03,749  * Restarting with stat
+2024-01-04 18:32:05,453  * Debugger is active!
+2024-01-04 18:32:05,519  * Debugger PIN: 994-283-381
+2024-01-04 18:32:07,968  * Debugger is active!
+2024-01-04 18:32:07,981  * Debugger PIN: 994-283-381
+2024-01-04 18:32:12,704  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:32:13,260  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:34:15,145 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:34:15,146 [33mPress CTRL+C to quit[0m

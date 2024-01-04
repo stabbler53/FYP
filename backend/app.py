@@ -3,10 +3,12 @@ import os
 import uuid
 import time
 import logging
+import hashlib
 from flask import Flask, render_template, request, jsonify
 from pylint.lint import Run
 from pylint.reporters.text import ParseableTextReporter
 from flask_cors import CORS
+from werkzeug.serving import run_simple
 
 app = Flask(__name__, static_folder='../frontend/static', template_folder='../frontend/templates')
 CORS(app, resources={r"/analyze": {"origins": "http://localhost:5000"}})  # Allow requests only from your frontend origin
@@ -25,24 +27,23 @@ def home():
 def analyze_code():
     try:
         code_file = request.files['codeFile']
+        code_content = code_file.read()
 
-        # Generate a unique temporary file name
-        temp_files_dir = 'temp_files'
-        os.makedirs(temp_files_dir, exist_ok=True)  # Ensure the directory exists
+        # Generate a unique file name based on the hash of the code content
+        file_name = hashlib.md5(code_content).hexdigest() + '.py'
+        file_path = os.path.join('temp_files', file_name)
 
-        temp_file_name = f'temp_file_{uuid.uuid4()}_{int(time.time())}.py'
-        temp_file_path = os.path.join(temp_files_dir, temp_file_name)
-
-        # Save the code to the temporary file using Flask's save method
-        code_file.save(temp_file_path)
+        # Save the code to the file using Flask's save method
+        code_file.seek(0)  # Reset file pointer to the beginning
+        code_file.save(file_path)
 
         # Log the content of the file for debugging
-        with open(temp_file_path, 'r', encoding='utf-8') as temp_file:
+        with open(file_path, 'r', encoding='utf-8') as temp_file:
             file_content = temp_file.read()
             logging.debug("File Content:\n%s" % file_content)
 
         # Run pylint without 'do_exit'
-        pylint_result = Run([temp_file_path], exit=False)
+        pylint_result = Run([file_path], exit=False)
 
         # Check if 'global_note' is present in pylint_result.linter.stats
         pylint_output = getattr(pylint_result.linter.stats, 'global_note', 'N/A')
@@ -69,4 +70,4 @@ def extract_comments_from_reporter(reporter):
     return []
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    run_simple('127.0.0.1', 5000, app)

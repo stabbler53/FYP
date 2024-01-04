@@ -1,0 +1,5207 @@
+2023-12-29 09:07:14,098 127.0.0.1 - - [29/Dec/2023 09:07:14] "GET / HTTP/1.1" 200 -
+2023-12-29 09:07:14,341 127.0.0.1 - - [29/Dec/2023 09:07:14] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 09:07:14,355 127.0.0.1 - - [29/Dec/2023 09:07:14] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 09:07:23,041 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-29 09:07:23,573 127.0.0.1 - - [29/Dec/2023 09:07:23] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 09:33:29,873 File Content:
+#Rashad Mohamed 2020355
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+mylist = np.array([10,20,30])
+
+labels = ['a','b','c']
+
+d = {'a':10,'b':20,'c':30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist,index=labels)
+
+pd.Series(d)
+
+pd.Series(data=labels)
+
+pd.Series([sum,print,len])
+
+ser1 = pd.Series([1,2,3,4],index = ['QW','AB','CD','EF'])
+
+ser2 = pd.Series([1,2,5,4],index = ['AB','CD','IJ','KL'])
+
+print (ser1)
+
+print (ser2)
+
+ser1 + ser2 
+np.random.seed(100)
+
+df = pd.DataFrame(randn(5,4),['Q','W','E','R','T'],['Z','X','C','V'])
+
+
+print (df)
+
+df = pd.DataFrame(randn(5,4),index = 'Q W E R T'. split(),columns = 'Z X C V'.split())
+
+print (df)
+
+
+df['Z']
+
+df['NEW'] = df['Z'] + df['X'] 
+
+print (df)
+
+df.drop('NEW',axis=1)
+
+print (df)
+
+df.drop('NEW', axis=1, inplace=True)
+
+print(df)
+
+print(df.loc['Q'])
+
+print(df.iloc[0])
+
+print(df.loc['Q',['Z','X']])
+
+print(df>0)
+
+print(df[df['Z']>0])
+
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+ 
+print(df.reset_index())
+
+newwind = 'AB CD EF GH IJ' .split()
+
+df['index'] = newwind
+
+print (df.set_index('index'))
+
+outside = ['G1','G1','G1','G2','G2','G2']
+
+inside = [1,2,3,1,2,3]
+
+hier_index   = list(zip(outside,inside))
+
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+
+print(hier_index)
+
+df=pd.DataFrame(np.random.randn(6,3),index = hier_index,columns = ['C','D','E'])
+
+print (df)
+
+df.loc['G1']
+
+df.index.names = ['Group','Num']
+
+print(df)
+
+df1 = pd.DataFrame({'Q':['Q0','Q1','Q2','Q3'],
+                    'W':['W0','W1','W2','W3'],
+                    'E':['E0','E1','E2','E3']},
+                    index = [0,1,2,3])
+
+df2 = pd.DataFrame({'Q':['Q0','Q5','Q6','Q7'],
+                    'W':['W4','W5','W6','W7'],
+                    'E':['E4','E5','E6','E7']},
+                    index = [4,5,6,7])
+
+print (df1)
+
+pd.concat([df1,df2])
+
+merged = pd.merge(df1,df2,how='inner', on='Q')
+
+print (merged)
+2023-12-29 09:33:30,022 127.0.0.1 - - [29/Dec/2023 09:33:30] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 11:02:25,951 127.0.0.1 - - [29/Dec/2023 11:02:25] "GET / HTTP/1.1" 200 -
+2023-12-29 11:02:31,573 127.0.0.1 - - [29/Dec/2023 11:02:31] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 11:02:31,577 127.0.0.1 - - [29/Dec/2023 11:02:31] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 22:58:31,112 127.0.0.1 - - [29/Dec/2023 22:58:31] "GET / HTTP/1.1" 200 -
+2023-12-29 22:58:31,165 127.0.0.1 - - [29/Dec/2023 22:58:31] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 22:58:31,337 127.0.0.1 - - [29/Dec/2023 22:58:31] "GET /static/main.js HTTP/1.1" 200 -
+2023-12-29 22:59:46,113 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2023-12-29 22:59:46,409 127.0.0.1 - - [29/Dec/2023 22:59:46] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 22:59:53,116 File Content:
+def sequence(g, l):
+    hens = (l - g * 4) / 2
+    return hens
+
+g, l = map(int, input().split())
+result = sequence(g, l)
+print(result)
+2023-12-29 22:59:53,228 127.0.0.1 - - [29/Dec/2023 22:59:53] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 22:59:59,410 File Content:
+#Rashad Mohamed 2020355
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+mylist = np.array([10,20,30])
+
+labels = ['a','b','c']
+
+d = {'a':10,'b':20,'c':30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist,index=labels)
+
+pd.Series(d)
+
+pd.Series(data=labels)
+
+pd.Series([sum,print,len])
+
+ser1 = pd.Series([1,2,3,4],index = ['QW','AB','CD','EF'])
+
+ser2 = pd.Series([1,2,5,4],index = ['AB','CD','IJ','KL'])
+
+print (ser1)
+
+print (ser2)
+
+ser1 + ser2 
+np.random.seed(100)
+
+df = pd.DataFrame(randn(5,4),['Q','W','E','R','T'],['Z','X','C','V'])
+
+
+print (df)
+
+df = pd.DataFrame(randn(5,4),index = 'Q W E R T'. split(),columns = 'Z X C V'.split())
+
+print (df)
+
+
+df['Z']
+
+df['NEW'] = df['Z'] + df['X'] 
+
+print (df)
+
+df.drop('NEW',axis=1)
+
+print (df)
+
+df.drop('NEW', axis=1, inplace=True)
+
+print(df)
+
+print(df.loc['Q'])
+
+print(df.iloc[0])
+
+print(df.loc['Q',['Z','X']])
+
+print(df>0)
+
+print(df[df['Z']>0])
+
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+ 
+print(df.reset_index())
+
+newwind = 'AB CD EF GH IJ' .split()
+
+df['index'] = newwind
+
+print (df.set_index('index'))
+
+outside = ['G1','G1','G1','G2','G2','G2']
+
+inside = [1,2,3,1,2,3]
+
+hier_index   = list(zip(outside,inside))
+
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+
+print(hier_index)
+
+df=pd.DataFrame(np.random.randn(6,3),index = hier_index,columns = ['C','D','E'])
+
+print (df)
+
+df.loc['G1']
+
+df.index.names = ['Group','Num']
+
+print(df)
+
+df1 = pd.DataFrame({'Q':['Q0','Q1','Q2','Q3'],
+                    'W':['W0','W1','W2','W3'],
+                    'E':['E0','E1','E2','E3']},
+                    index = [0,1,2,3])
+
+df2 = pd.DataFrame({'Q':['Q0','Q5','Q6','Q7'],
+                    'W':['W4','W5','W6','W7'],
+                    'E':['E4','E5','E6','E7']},
+                    index = [4,5,6,7])
+
+print (df1)
+
+pd.concat([df1,df2])
+
+merged = pd.merge(df1,df2,how='inner', on='Q')
+
+print (merged)
+2023-12-29 22:59:59,563 127.0.0.1 - - [29/Dec/2023 22:59:59] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:04:29,819 File Content:
+# Rashad Mohamed 2020355
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line has no effect, consider removing it
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+# Access columns in DataFrame
+df['Z']
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+# Rename MultiIndex levels
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 'W': ['W0', 'W1', 'W2', 'W3'], 'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'], 'W': ['W4', 'W5', 'W6', 'W7'], 'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:04:30,084 127.0.0.1 - - [29/Dec/2023 23:04:30] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:05:58,087 File Content:
+# Rashad Mohamed 2020355
+# Add a module docstring here explaining the purpose of the code.
+
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+# Access columns in DataFrame
+df['Z']
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+# Rename MultiIndex levels
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 'W': ['W0', 'W1', 'W2', 'W3'], 'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'], 'W': ['W4', 'W5', 'W6', 'W7'], 'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:05:58,221 127.0.0.1 - - [29/Dec/2023 23:05:58] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:06:11,338 File Content:
+# Rashad Mohamed 2020355
+# Add a module docstring here explaining the purpose of the code.
+
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+# Access columns in DataFrame
+df['Z']
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+# Rename MultiIndex levels
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 'W': ['W0', 'W1', 'W2', 'W3'], 'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'], 'W': ['W4', 'W5', 'W6', 'W7'], 'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:06:11,509 127.0.0.1 - - [29/Dec/2023 23:06:11] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:06:13,063 127.0.0.1 - - [29/Dec/2023 23:06:13] "GET / HTTP/1.1" 200 -
+2023-12-29 23:06:13,084 127.0.0.1 - - [29/Dec/2023 23:06:13] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 23:06:13,327 127.0.0.1 - - [29/Dec/2023 23:06:13] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 23:06:16,872 File Content:
+# Rashad Mohamed 2020355
+# Add a module docstring here explaining the purpose of the code.
+
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+# Access columns in DataFrame
+df['Z']
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+# Rename MultiIndex levels
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 'W': ['W0', 'W1', 'W2', 'W3'], 'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'], 'W': ['W4', 'W5', 'W6', 'W7'], 'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:06:17,027 127.0.0.1 - - [29/Dec/2023 23:06:17] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:07:47,748 File Content:
+# Add a module docstring here explaining the purpose of the code.
+
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+# Access columns in DataFrame
+df['Z']
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+# Rename MultiIndex levels
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 'W': ['W0', 'W1', 'W2', 'W3'], 'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'], 'W': ['W4', 'W5', 'W6', 'W7'], 'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:07:47,891 127.0.0.1 - - [29/Dec/2023 23:07:47] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:13:17,399 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 23:13:17,400 [33mPress CTRL+C to quit[0m
+2023-12-29 23:13:17,407  * Restarting with stat
+2023-12-29 23:13:17,869  * Debugger is active!
+2023-12-29 23:13:17,872  * Debugger PIN: 994-283-381
+2023-12-29 23:13:23,587 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 23:13:23,588 [33mPress CTRL+C to quit[0m
+2023-12-29 23:13:23,590  * Restarting with stat
+2023-12-29 23:13:24,037  * Debugger is active!
+2023-12-29 23:13:24,040  * Debugger PIN: 994-283-381
+2023-12-29 23:13:30,245 127.0.0.1 - - [29/Dec/2023 23:13:30] "GET / HTTP/1.1" 200 -
+2023-12-29 23:13:30,472 127.0.0.1 - - [29/Dec/2023 23:13:30] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 23:13:30,490 127.0.0.1 - - [29/Dec/2023 23:13:30] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 23:13:52,654 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+# Access columns in DataFrame
+df['Z']
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+# Rename MultiIndex levels
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:13:58,685 127.0.0.1 - - [29/Dec/2023 23:13:58] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:18:16,284 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+# Access data using MultiIndex
+df.loc['G1']
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:18:16,469 127.0.0.1 - - [29/Dec/2023 23:18:16] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:18:37,881 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'], 
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:18:38,084 127.0.0.1 - - [29/Dec/2023 23:18:38] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:19:35,346 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:19:35,825 127.0.0.1 - - [29/Dec/2023 23:19:35] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:21:03,179 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:21:03,374 127.0.0.1 - - [29/Dec/2023 23:21:03] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:23:03,691 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:23:03,856 127.0.0.1 - - [29/Dec/2023 23:23:03] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:25:13,797  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-29 23:25:15,099  * Restarting with stat
+2023-12-29 23:25:46,430 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 23:25:46,430 [33mPress CTRL+C to quit[0m
+2023-12-29 23:25:46,435  * Restarting with stat
+2023-12-29 23:25:47,012  * Debugger is active!
+2023-12-29 23:25:47,016  * Debugger PIN: 994-283-381
+2023-12-29 23:25:54,692 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 31, in analyze_code
+    file_name = f'temp_file_{snakecase.snakecase(uuid.uuid4())}_{int(time.time())}.py'
+                             ^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'snakecase' has no attribute 'snakecase'
+2023-12-29 23:25:54,694 127.0.0.1 - - [29/Dec/2023 23:25:54] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2023-12-29 23:25:55,984 127.0.0.1 - - [29/Dec/2023 23:25:55] "GET / HTTP/1.1" 200 -
+2023-12-29 23:25:56,470 127.0.0.1 - - [29/Dec/2023 23:25:56] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 23:25:56,500 127.0.0.1 - - [29/Dec/2023 23:25:56] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 23:26:00,008 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 31, in analyze_code
+    file_name = f'temp_file_{snakecase.snakecase(uuid.uuid4())}_{int(time.time())}.py'
+                             ^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'snakecase' has no attribute 'snakecase'
+2023-12-29 23:26:00,012 127.0.0.1 - - [29/Dec/2023 23:26:00] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2023-12-29 23:26:42,170  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-29 23:26:42,249  * Restarting with stat
+2023-12-29 23:27:03,124 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2023-12-29 23:27:03,125 [33mPress CTRL+C to quit[0m
+2023-12-29 23:27:03,129  * Restarting with stat
+2023-12-29 23:27:03,754  * Debugger is active!
+2023-12-29 23:27:03,758  * Debugger PIN: 994-283-381
+2023-12-29 23:27:08,689 127.0.0.1 - - [29/Dec/2023 23:27:08] "GET / HTTP/1.1" 200 -
+2023-12-29 23:27:08,846 127.0.0.1 - - [29/Dec/2023 23:27:08] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 23:27:08,951 127.0.0.1 - - [29/Dec/2023 23:27:08] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 23:27:12,506 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:27:18,138 127.0.0.1 - - [29/Dec/2023 23:27:18] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:27:42,514 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:27:42,706 127.0.0.1 - - [29/Dec/2023 23:27:42] "POST /analyze HTTP/1.1" 200 -
+2023-12-29 23:28:36,600  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2023-12-29 23:28:37,773  * Restarting with stat
+2023-12-29 23:28:38,188  * Debugger is active!
+2023-12-29 23:28:38,191  * Debugger PIN: 994-283-381
+2023-12-29 23:28:42,387 127.0.0.1 - - [29/Dec/2023 23:28:42] "GET / HTTP/1.1" 200 -
+2023-12-29 23:28:42,566 127.0.0.1 - - [29/Dec/2023 23:28:42] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2023-12-29 23:28:42,633 127.0.0.1 - - [29/Dec/2023 23:28:42] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2023-12-29 23:28:46,181 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2023-12-29 23:28:51,866 127.0.0.1 - - [29/Dec/2023 23:28:51] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 17:55:42,021 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 17:55:42,026 [33mPress CTRL+C to quit[0m
+2024-01-04 17:55:42,037  * Restarting with stat
+2024-01-04 17:55:43,508  * Debugger is active!
+2024-01-04 17:55:43,555  * Debugger PIN: 994-283-381
+2024-01-04 17:55:50,045 127.0.0.1 - - [04/Jan/2024 17:55:50] "GET / HTTP/1.1" 200 -
+2024-01-04 17:55:50,482 127.0.0.1 - - [04/Jan/2024 17:55:50] "GET /static/main.js HTTP/1.1" 200 -
+2024-01-04 17:55:50,542 127.0.0.1 - - [04/Jan/2024 17:55:50] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 17:55:55,083 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 17:55:55,840  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 17:55:56,166  * Restarting with stat
+2024-01-04 17:55:56,680  * Debugger is active!
+2024-01-04 17:55:56,684  * Debugger PIN: 994-283-381
+2024-01-04 17:55:58,852 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 17:55:59,702  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 17:56:00,001  * Restarting with stat
+2024-01-04 17:56:00,453  * Debugger is active!
+2024-01-04 17:56:00,457  * Debugger PIN: 994-283-381
+2024-01-04 17:56:24,740 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 17:56:25,553  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 17:56:25,929  * Restarting with stat
+2024-01-04 17:56:26,385  * Debugger is active!
+2024-01-04 17:56:26,388  * Debugger PIN: 994-283-381
+2024-01-04 17:56:27,325 127.0.0.1 - - [04/Jan/2024 17:56:27] "GET / HTTP/1.1" 200 -
+2024-01-04 17:56:27,594 127.0.0.1 - - [04/Jan/2024 17:56:27] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 17:56:27,600 127.0.0.1 - - [04/Jan/2024 17:56:27] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 17:56:35,049 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 17:56:35,515  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 17:56:35,749  * Restarting with stat
+2024-01-04 17:56:36,140  * Debugger is active!
+2024-01-04 17:56:36,143  * Debugger PIN: 994-283-381
+2024-01-04 17:57:08,327 127.0.0.1 - - [04/Jan/2024 17:57:08] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:00:12,691  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:00:12,747  * Restarting with stat
+2024-01-04 18:00:13,181  * Debugger is active!
+2024-01-04 18:00:13,185  * Debugger PIN: 994-283-381
+2024-01-04 18:00:18,337 127.0.0.1 - - [04/Jan/2024 18:00:18] "GET / HTTP/1.1" 200 -
+2024-01-04 18:00:18,575 127.0.0.1 - - [04/Jan/2024 18:00:18] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:00:18,582 127.0.0.1 - - [04/Jan/2024 18:00:18] "GET /static/main.js HTTP/1.1" 200 -
+2024-01-04 18:00:23,579 Error during analysis:
+Traceback (most recent call last):
+  File "d:\FYPcode\backend\app.py", line 32, in analyze_code
+    file_name = hashlib.md5(code_content.encode()).hexdigest() + '.py'
+                            ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?
+2024-01-04 18:00:23,581 127.0.0.1 - - [04/Jan/2024 18:00:23] "[35m[1mPOST /analyze HTTP/1.1[0m" 500 -
+2024-01-04 18:02:16,480  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:02:16,584  * Restarting with stat
+2024-01-04 18:02:17,076  * Debugger is active!
+2024-01-04 18:02:17,081  * Debugger PIN: 994-283-381
+2024-01-04 18:02:18,655 127.0.0.1 - - [04/Jan/2024 18:02:18] "GET / HTTP/1.1" 200 -
+2024-01-04 18:02:18,897 127.0.0.1 - - [04/Jan/2024 18:02:18] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:02:18,904 127.0.0.1 - - [04/Jan/2024 18:02:18] "GET /static/main.js HTTP/1.1" 200 -
+2024-01-04 18:02:23,649 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:02:24,141  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:02:24,410  * Restarting with stat
+2024-01-04 18:02:24,843  * Debugger is active!
+2024-01-04 18:02:24,846  * Debugger PIN: 994-283-381
+2024-01-04 18:02:29,852 127.0.0.1 - - [04/Jan/2024 18:02:29] "GET / HTTP/1.1" 200 -
+2024-01-04 18:02:30,080 127.0.0.1 - - [04/Jan/2024 18:02:30] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:02:30,091 127.0.0.1 - - [04/Jan/2024 18:02:30] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:02:36,095 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:02:36,883  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:02:37,229  * Restarting with stat
+2024-01-04 18:02:37,632  * Debugger is active!
+2024-01-04 18:02:37,635  * Debugger PIN: 994-283-381
+2024-01-04 18:04:23,939  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:04:24,022  * Restarting with stat
+2024-01-04 18:04:24,584  * Debugger is active!
+2024-01-04 18:04:24,587  * Debugger PIN: 994-283-381
+2024-01-04 18:04:40,970 127.0.0.1 - - [04/Jan/2024 18:04:40] "GET / HTTP/1.1" 200 -
+2024-01-04 18:04:41,218 127.0.0.1 - - [04/Jan/2024 18:04:41] "GET /static/main.js HTTP/1.1" 200 -
+2024-01-04 18:04:41,220 127.0.0.1 - - [04/Jan/2024 18:04:41] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:04:46,534 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:04:46,659  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:04:46,750  * Restarting with stat
+2024-01-04 18:04:47,198  * Debugger is active!
+2024-01-04 18:04:47,201  * Debugger PIN: 994-283-381
+2024-01-04 18:06:35,923 127.0.0.1 - - [04/Jan/2024 18:06:35] "GET / HTTP/1.1" 200 -
+2024-01-04 18:06:36,158 127.0.0.1 - - [04/Jan/2024 18:06:36] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:06:36,164 127.0.0.1 - - [04/Jan/2024 18:06:36] "GET /static/main.js HTTP/1.1" 200 -
+2024-01-04 18:06:41,091 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:06:41,576  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:06:41,807  * Restarting with stat
+2024-01-04 18:06:42,226  * Debugger is active!
+2024-01-04 18:06:42,229  * Debugger PIN: 994-283-381
+2024-01-04 18:07:05,832 127.0.0.1 - - [04/Jan/2024 18:07:05] "GET / HTTP/1.1" 200 -
+2024-01-04 18:07:06,079 127.0.0.1 - - [04/Jan/2024 18:07:06] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:07:06,085 127.0.0.1 - - [04/Jan/2024 18:07:06] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:07:11,141 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:07:11,507  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:07:11,776  * Restarting with stat
+2024-01-04 18:07:12,302  * Debugger is active!
+2024-01-04 18:07:12,305  * Debugger PIN: 994-283-381
+2024-01-04 18:08:46,538  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:08:46,587  * Restarting with stat
+2024-01-04 18:08:47,028  * Debugger is active!
+2024-01-04 18:08:47,032  * Debugger PIN: 994-283-381
+2024-01-04 18:09:37,378 127.0.0.1 - - [04/Jan/2024 18:09:37] "GET / HTTP/1.1" 200 -
+2024-01-04 18:09:37,609 127.0.0.1 - - [04/Jan/2024 18:09:37] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:09:37,613 127.0.0.1 - - [04/Jan/2024 18:09:37] "GET /static/main.js HTTP/1.1" 200 -
+2024-01-04 18:09:42,347 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:09:43,176  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:09:43,589  * Restarting with stat
+2024-01-04 18:09:44,030  * Debugger is active!
+2024-01-04 18:09:44,033  * Debugger PIN: 994-283-381
+2024-01-04 18:11:20,287  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:11:20,333  * Restarting with stat
+2024-01-04 18:11:20,825 Serving on http://127.0.0.1:5000
+2024-01-04 18:20:08,816 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-01-04 18:20:08,830 [33mPress CTRL+C to quit[0m
+2024-01-04 18:20:08,840  * Restarting with stat
+2024-01-04 18:20:09,707  * Debugger is active!
+2024-01-04 18:20:09,711  * Debugger PIN: 994-283-381
+2024-01-04 18:20:14,780 127.0.0.1 - - [04/Jan/2024 18:20:14] "GET / HTTP/1.1" 200 -
+2024-01-04 18:20:15,179 127.0.0.1 - - [04/Jan/2024 18:20:15] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:20:15,280 127.0.0.1 - - [04/Jan/2024 18:20:15] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:20:20,390 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:20:20,979  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:20:21,265  * Restarting with stat
+2024-01-04 18:20:21,783  * Debugger is active!
+2024-01-04 18:20:21,789  * Debugger PIN: 994-283-381
+2024-01-04 18:20:22,922 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:20:23,811  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:20:24,123  * Restarting with stat
+2024-01-04 18:20:24,570  * Debugger is active!
+2024-01-04 18:20:24,574  * Debugger PIN: 994-283-381
+2024-01-04 18:20:42,087 127.0.0.1 - - [04/Jan/2024 18:20:42] "GET / HTTP/1.1" 200 -
+2024-01-04 18:20:42,353 127.0.0.1 - - [04/Jan/2024 18:20:42] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:20:42,357 127.0.0.1 - - [04/Jan/2024 18:20:42] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:20:46,428 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:20:46,782  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:20:47,012  * Restarting with stat
+2024-01-04 18:20:47,531  * Debugger is active!
+2024-01-04 18:20:47,536  * Debugger PIN: 994-283-381
+2024-01-04 18:27:52,910 127.0.0.1 - - [04/Jan/2024 18:27:52] "GET / HTTP/1.1" 200 -
+2024-01-04 18:27:53,362 127.0.0.1 - - [04/Jan/2024 18:27:53] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:27:53,379 127.0.0.1 - - [04/Jan/2024 18:27:53] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:28:29,113 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:28:30,271  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:28:30,944  * Restarting with stat
+2024-01-04 18:28:31,885  * Debugger is active!
+2024-01-04 18:28:31,892  * Debugger PIN: 994-283-381
+2024-01-04 18:31:01,139 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2024-01-04 18:31:06,226 127.0.0.1 - - [04/Jan/2024 18:31:06] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 18:31:17,797 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:31:18,132  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:31:19,074  * Restarting with stat
+2024-01-04 18:31:19,759  * Debugger is active!
+2024-01-04 18:31:19,767  * Debugger PIN: 994-283-381
+2024-01-04 18:31:24,538 127.0.0.1 - - [04/Jan/2024 18:31:24] "GET / HTTP/1.1" 200 -
+2024-01-04 18:31:24,941 127.0.0.1 - - [04/Jan/2024 18:31:24] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:31:24,985 127.0.0.1 - - [04/Jan/2024 18:31:24] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:31:30,399 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2024-01-04 18:31:30,978  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\4ec6b7896daffed8b251fac54f1ce7f9.py', reloading
+2024-01-04 18:31:31,351  * Restarting with stat
+2024-01-04 18:31:32,260  * Debugger is active!
+2024-01-04 18:31:32,264  * Debugger PIN: 994-283-381
+2024-01-04 18:31:36,569 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:31:37,422  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:31:37,804  * Restarting with stat
+2024-01-04 18:31:38,324  * Debugger is active!
+2024-01-04 18:31:38,332  * Debugger PIN: 994-283-381
+2024-01-04 18:32:06,960 127.0.0.1 - - [04/Jan/2024 18:32:06] "GET / HTTP/1.1" 200 -
+2024-01-04 18:32:07,342 127.0.0.1 - - [04/Jan/2024 18:32:07] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:32:07,383 127.0.0.1 - - [04/Jan/2024 18:32:07] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:32:12,548 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:32:12,674  * Detected change in 'd:\\FYPcode\\backend\\temp_files\\a7733d06ddfb16e9bc9f785975b73184.py', reloading
+2024-01-04 18:32:12,878  * Restarting with stat
+2024-01-04 18:32:14,699  * Debugger is active!
+2024-01-04 18:32:14,715  * Debugger PIN: 994-283-381
+2024-01-04 18:34:09,311  * Detected change in 'd:\\FYPcode\\backend\\app.py', reloading
+2024-01-04 18:34:09,416  * Restarting with stat
+2024-01-04 18:34:19,735 127.0.0.1 - - [04/Jan/2024 18:34:19] "GET / HTTP/1.1" 200 -
+2024-01-04 18:34:20,091 127.0.0.1 - - [04/Jan/2024 18:34:20] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2024-01-04 18:34:20,098 127.0.0.1 - - [04/Jan/2024 18:34:20] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2024-01-04 18:34:27,871 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:34:37,693 127.0.0.1 - - [04/Jan/2024 18:34:37] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 18:51:45,669 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2024-01-04 18:51:46,431 127.0.0.1 - - [04/Jan/2024 18:51:46] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 18:51:52,630 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 18:51:52,760 127.0.0.1 - - [04/Jan/2024 18:51:52] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 18:56:34,379 File Content:
+import random
+import logging
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import optimizers
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("ann_test.log"),
+                              logging.StreamHandler()])
+
+class ANN(Sequential):
+    def __init__(self, child_weights=None):
+        super().__init__()
+
+        if child_weights is None:
+            layer1 = Dense(8, input_shape=(8,), activation='sigmoid')
+            layer2 = Dense(1, activation='sigmoid')
+            self.add(layer1)
+            self.add(layer2)
+        else:
+            self.add(
+                Dense(
+                    8,
+                    input_shape=(8,),
+                    activation='sigmoid',
+                    weights=[child_weights[0], np.ones(8)])
+            )
+            self.add(
+                Dense(
+                    1,
+                    activation='sigmoid',
+                    weights=[child_weights[1], np.zeros(1)])
+            )
+
+    def forward_propagation(self, train_feature, train_label):
+        predict_label = self.predict(train_feature.values)
+        self.fitness = accuracy_score(train_label, predict_label.round())
+
+def crossover(nn1, nn2):
+    nn1_weights = []
+    nn2_weights = []
+    child_weights = []
+
+    for layer in nn1.layers:
+        nn1_weights.append(layer.get_weights()[0])
+
+    for layer in nn2.layers:
+        nn2_weights.append(layer.get_weights()[0])
+
+    for i in range(len(nn1_weights)):
+        split = random.randint(0, np.shape(nn1_weights[i])[1]-1)
+        for j in range(split, np.shape(nn1_weights[i])[1]-1):
+            nn1_weights[i][:, j] = nn2_weights[i][:, j]
+
+        child_weights.append(nn1_weights[i])
+
+    mutation(child_weights)
+
+    child = ANN(child_weights)
+    return child
+
+def mutation(child_weights):
+    selection = random.randint(0, len(child_weights)-1)
+    mut = random.uniform(0, 1)
+    if mut <= .05:
+        child_weights[selection] *= random.randint(2, 5)
+    else:
+        pass
+
+# Preprocess Data
+df = pd.read_table('./diabetes.txt', header=None, encoding='gb2312', sep='\t')
+df.astype(float)
+df.pop(10)
+df.pop(0)
+label = df.pop(9)
+train_feature = df[:576]
+train_label = label[:576]
+test_feature = df[576:]
+test_label = label[576:]
+
+networks = []
+pool = []
+generation = 0
+population = 10
+
+for i in range(population):
+    networks.append(ANN())
+
+max_fitness = 0
+optimal_weights = []
+
+epochs = 10
+
+for i in range(epochs):
+    generation += 1
+    logging.debug("Generation: " + str(generation) + "\r\n")
+
+    for ann in networks:
+        ann.forward_propagation(train_feature, train_label)
+        pool.append(ann)
+
+    networks.clear()
+    pool = sorted(pool, key=lambda x: x.fitness)
+    pool.reverse()
+
+    for i in range(len(pool)):
+        if pool[i].fitness > max_fitness:
+            max_fitness = pool[i].fitness
+            logging.debug("Max Fitness: " + str(max_fitness) + "\r\n")
+
+            optimal_weights = []
+            for layer in pool[i].layers:
+                optimal_weights.append(layer.get_weights()[0])
+            logging.debug('optimal_weights: ' + str(optimal_weights)+"\r\n")
+
+    for i in range(5):
+        for j in range(2):
+            temp = crossover(pool[i], random.choice(pool))
+            networks.append(temp)
+
+ann = ANN(optimal_weights)
+predict_label = ann.predict(test_feature.values)
+print('Test Accuracy: %.2f' % accuracy_score(test_label, predict_label.round()))
+
+2024-01-04 18:56:34,577 127.0.0.1 - - [04/Jan/2024 18:56:34] "POST /analyze HTTP/1.1" 200 -
+2024-01-04 20:22:35,064 File Content:
+# Add a module docstring here explaining the purpose of the code.
+"""Spreadsheet Column Printer
+
+This script allows the user to print to the console all columns in the
+spreadsheet. It is assumed that the first row of the spreadsheet is the
+location of the columns.
+
+This tool accepts comma separated value files (.csv) as well as excel
+(.xls, .xlsx) files.
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * get_spreadsheet_cols - returns the column headers of the file
+    * main - the main function of the script
+"""
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+
+# Create a Pandas Series
+mylist = np.array([10, 20, 30])
+labels = ['a', 'b', 'c']
+d = {'a': 10, 'b': 20, 'c': 30}
+
+pd.Series(data=mylist)
+
+pd.Series(data=mylist, index=labels)
+
+pd.Series(d)
+
+# The following line seems to have no effect, consider removing it.
+# W0104: Statement seems to have no effect (pointless-statement)
+pd.Series(data=labels)
+
+pd.Series([sum, print, len])
+
+ser1 = pd.Series([1, 2, 3, 4], index=['QW', 'AB', 'CD', 'EF'])
+ser2 = pd.Series([1, 2, 5, 4], index=['AB', 'CD', 'IJ', 'KL'])
+
+print(ser1)
+print(ser2)
+
+# Perform arithmetic operations on Series
+result = ser1 + ser2
+print(result)
+
+# Create a DataFrame
+np.random.seed(100)
+df = pd.DataFrame(randn(5, 4), ['Q', 'W', 'E', 'R', 'T'], ['Z', 'X', 'C', 'V'])
+print(df)
+
+df = pd.DataFrame(randn(5, 4), index='Q W E R T'.split(), columns='Z X C V'.split())
+print(df)
+
+
+# Create a new column 'NEW'
+df['NEW'] = df['Z'] + df['X']
+print(df)
+
+# Drop the 'NEW' column
+df.drop('NEW', axis=1, inplace=True)
+print(df)
+
+# Access a specific row
+print(df.loc['Q'])
+print(df.iloc[0])
+
+# Access specific elements
+print(df.loc['Q', ['Z', 'X']])
+
+# Conditional selection
+print(df > 0)
+print(df[df['Z'] > 0])
+print(df[(df['Z'] > 0) & (df['C'] > 0)])
+print(df[(df['X'] > 0) | (df['C'] > 0)])
+
+# Reset and set index
+print(df.reset_index())
+newwind = 'AB CD EF GH IJ'.split()
+df['index'] = newwind
+print(df.set_index('index'))
+
+# Create a MultiIndex DataFrame
+outside = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
+inside = [1, 2, 3, 1, 2, 3]
+hier_index = list(zip(outside, inside))
+hier_index = pd.MultiIndex.from_tuples(hier_index)
+print(hier_index)
+
+df = pd.DataFrame(np.random.randn(6, 3), index=hier_index, columns=['C', 'D', 'E'])
+print(df)
+
+
+df.index.names = ['Group', 'Num']
+print(df)
+
+# Concatenate DataFrames
+df1 = pd.DataFrame({'Q': ['Q0', 'Q1', 'Q2', 'Q3'],
+                    'W': ['W0', 'W1', 'W2', 'W3'],
+                    'E': ['E0', 'E1', 'E2', 'E3']},
+                   index=[0, 1, 2, 3])
+df2 = pd.DataFrame({'Q': ['Q0', 'Q5', 'Q6', 'Q7'],
+                    'W': ['W4', 'W5', 'W6', 'W7'],
+                    'E': ['E4', 'E5', 'E6', 'E7']},
+                   index=[4, 5, 6, 7])
+
+print(df1)
+pd.concat([df1, df2])
+
+# Merge DataFrames
+merged = pd.merge(df1, df2, how='inner', on='Q')
+print(merged)
+
+2024-01-04 20:22:35,293 127.0.0.1 - - [04/Jan/2024 20:22:35] "POST /analyze HTTP/1.1" 200 -
